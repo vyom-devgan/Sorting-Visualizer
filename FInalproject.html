@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <svg id="chart-svg" width="1920" height="1080"></svg>
+    <button id="sort">Sort</button>
+    <script>
+        var data = [{ value: 10 }, { value: 15 }, { value: 20 }, { value: 5 }, { value: 25 }];
+        var svg = d3.select("#chart-svg"),
+            width = +svg.attr("width"),
+            height = +svg.attr("height");
+
+        var xScale = d3.scaleBand().range([0, width]).padding(0.1);
+        var yScale = d3.scaleLinear().range([height, 0]);
+
+        function renderBars(data) {
+            xScale.domain(data.map((d, i) => i));
+            yScale.domain([0, d3.max(data, function (d) { return d.value; })]);
+
+            var bars = svg.selectAll(".bar").data(data, function (d) { return d.value; });
+
+            bars.enter()
+                .append("rect")
+                .attr("class", "bar")
+                .merge(bars)
+                .transition()
+                .duration(250)
+                .attr("x", function (d, i) { return xScale(i); })
+                .attr("y", function (d) { return yScale(d.value); })
+                .attr("width", xScale.bandwidth())
+                .attr("height", function (d) { return height - yScale(d.value); });
+
+            bars.exit().remove();
+        }
+
+        svg.on("click", function (event) {
+            var coords = d3.pointer(event, svg.node());
+            var newValue = yScale.invert(coords[1]);
+            data.push({ value: newValue });
+            renderBars(data);
+        });
+
+        async function quickSort(arr, start, end) {
+            if (start < end) {
+                var pivotIndex = await partition(arr, start, end);
+                await Promise.all([
+                    quickSort(arr, start, pivotIndex - 1),
+                    quickSort(arr, pivotIndex + 1, end)
+                ]);
+                renderBars(data);
+            }
+        }
+
+        async function partition(arr, start, end) {
+            var pivotValue = arr[end].value;
+            var pivotIndex = start;
+            for (var i = start; i < end; i++) {
+                if (arr[i].value < pivotValue) {
+                    await swap(arr, i, pivotIndex);
+                    pivotIndex++;
+                }
+            }
+            await swap(arr, pivotIndex, end);
+            return pivotIndex;
+        }
+
+        async function swap(arr, i, j) {
+            await sleep(50); // Introducing a delay for visualization
+            var temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+
+        async function mergeSort(arr) {
+            if (arr.length <= 1) {
+                return arr;
+            }
+            var mid = Math.floor(arr.length / 2);
+            var left = arr.slice(0, mid);
+            var right = arr.slice(mid);
+
+            left = await mergeSort(left);
+            right = await mergeSort(right);
+
+            return await merge(left, right);
+        }
+
+        async function merge(left, right) {
+            var result = [];
+            var leftIndex = 0;
+            var rightIndex = 0;
+
+            while (leftIndex < left.length && rightIndex < right.length) {
+                if (left[leftIndex].value < right[rightIndex].value) {
+                    result.push(left[leftIndex++]);
+                } else {
+                    result.push(right[rightIndex++]);
+                }
+            }
+
+            return result.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        document.getElementById("sort").addEventListener("click", async function () {
+            // Choose the sorting algorithm you want to use
+            // For example, use quickSort(data, 0, data.length - 1) for quicksort
+            // Or use data = await mergeSort(data) for mergesort
+            data = await mergeSort(data);
+            renderBars(data);
+        });
+    </script>
+</body>
+</html>
