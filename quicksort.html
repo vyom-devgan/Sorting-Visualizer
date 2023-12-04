@@ -3,7 +3,7 @@
 <head>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-
+        
         .bar{
             fill: green
         }
@@ -14,8 +14,8 @@
         }
 
         #sort {
-            background-color: orange; /* Orange background */
-            color: black; /* Black text */
+            background-color: orange; /* Green background */
+            color: black; /* White text */
             padding: 15px 32px; /* Padding around the text */
             text-align: center; /* Center the text inside the button */
             text-decoration: none; /* Remove underline from text */
@@ -25,15 +25,12 @@
             cursor: pointer; /* Change mouse cursor to indicate clickable */
             border: none; /* Remove border */
             border-radius: 8px; /* Rounded corners */
-            box-shadow: 0 12px 4px rgba(0, 0, 0, 0.2);
         }
 
         #sort:hover {
             background-color: green; /* Darker shade of green when hovered */
         }
-
     </style>
-
 </head>
 <body>
     
@@ -44,8 +41,6 @@
         var svg = d3.select("#chart-svg"),
             width = +svg.attr("width"),
             height = +svg.attr("height");
-
-            
 
         var xScale = d3.scaleBand().range([0, width]).padding(0.1);
         var yScale = d3.scaleLinear().range([height, 0]);
@@ -79,41 +74,51 @@
             renderBars(data);
         });
 
+        async function quickSort(arr, start, end) {
+            if (start >= end) {
+                return;
+            }
+            let index = await partition(arr, start, end);
+            await quickSort(arr, start, index - 1);
+            await quickSort(arr, index + 1, end);
+        }
+
+        async function partition(arr, start, end) {
+            let pivotValue = arr[end].value;
+            let pivotIndex = start;
+            for (let i = start; i < end; i++) {
+                if (arr[i].value < pivotValue) {
+                    await swap(arr, i, pivotIndex);
+                    pivotIndex++;
+                }
+            }
+            await swap(arr, pivotIndex, end);
+            return pivotIndex;
+        }
+
+        async function swap(arr, i, j) {
+            await sleep(150); // Delay for visualization
+            let temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+            highlightBar(i);
+            highlightBar(j);
+            renderBars(arr); // Update bars
+        }
 
         function highlightBar(index) {
             svg.selectAll(".bar")
                 .attr("class", (d, i) => i === index ? "highlight" : "bar");
         }
 
-        async function insertionSort(arr) {
-            for (let i = 1; i < arr.length; i++) {
-                let key = arr[i];
-                let j = i - 1;
-                while (j >= 0 && arr[j].value > key.value) {
-                    await sleep(150); // Delay for visualization
-                    arr[j + 1] = arr[j];
-                    j = j - 1;
-                    highlightBar(j + 1);
-                    arr[j + 1] = key;
-                    renderBars(data); // Update bars
-                }
-                highlightBar(-1); // Remove highlight after each insertion
-            }
-            // Remove all bars with 'highlight' class after sorting is complete
-            svg.selectAll(".highlight").remove();
-        }
-
-
-
         document.getElementById("sort").addEventListener("click", async function() {
-            await insertionSort(data);
-                svg.selectAll(".bar").attr("class", "bar"); // Reset classes after sorting
+            await quickSort(data, 0, data.length - 1);
+            svg.selectAll(".bar").attr("class", "bar"); // Reset classes after sorting
         });
 
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
-
 
     </script>
 </body>

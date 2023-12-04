@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="css/DropDown.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="custom-dropdown">
+    <div class="dropdown-btn" id="dropdownBtn">Select a Sorting Algorithm</div>
+    <div class="dropdown-content" id="dropdownContent">
+        <!-- Update these lines with onclick attribute -->
+        <div class="dropdown-item" onclick="loadPage('Finalproject.html')">Merge Sort</div>
+        <div class="dropdown-item" onclick="loadPage('Insertion_Sort.html')">Insertion Sort</div>
+        <div class="dropdown-item" onclick="loadPage('quicksort.html')">Quick Sort</div>
+    </div>
+</div>
+
+<iframe id="pageFrame" frameborder="0" style="width:100%; height:100vh;"></iframe>
+
+<script>
+    // Add the loadPage function here
+    function loadPage(page) {
+        if (page) {
+            document.getElementById("pageFrame").src = page;
+        } else {
+            document.getElementById("pageFrame").src = "";
+        }
+    }
+
+    // Event listener for the dropdown button
+    document.getElementById('dropdownBtn').addEventListener('click', function() {
+        document.getElementById('dropdownContent').classList.toggle('show');
+    });
+</script>
+
+</body>
+</html>
