@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bubble Sort Visualizer</title>
+    <style>
+        /* CSS styling */
+        .bar {
+            fill: steelblue;
+        }
+        .bar.swap {
+            fill: darkorange;
+        }
+        .code-container {
+            white-space: pre;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-y: scroll;
+            height: 500px;
+        }
+        .highlight {
+            background-color: yellow;
+        }
+        .container {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <button id="sort">Sort</button>
+            <button id="step" disabled>Step</button>
+            <div id="visualizer"></div>
+        </div>
+        <div class="code-container" id="code">
+            for(var i = 0; i <= array.length-1; i++){
+                // Last i elements are already in place
+                for(var j = 0; j < ( array.length - i -1); j++){
+        
+                    // Comparing two adjacent numbers 
+                    // and see if first is greater than second
+                    if(array[j] > array[j+1]){
+        
+                    // Swap them if the condition is true 
+                    var temp = array[j]
+                    array[j] = array[j + 1]
+                    array[j+1] = temp
+                    }
+                }
+            }
+        </div>
+    </div>
+    <!-- Include D3.js -->
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+
+    <script>
+        // Set up SVG using D3.js
+        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+        const width = 960 - margin.left - margin.right;
+        const height = 500 - margin.top - margin.bottom;
+
+        const svg = d3.select("#visualizer").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // Initialize empty data array
+        let data = [];
+
+        // Scale for the bars
+        const x = d3.scaleBand()
+            .range([0, width])
+            .padding(0.1);
+
+        // Update the visualization with new data
+        function updateVisualization() {
+            x.domain(data.map((d, i) => i));
+            const bars = svg.selectAll(".bar").data(data);
+
+            bars.enter().append("rect")
+                .attr("class", "bar")
+                .merge(bars)
+                .attr("x", (d, i) => x(i))
+                .attr("y", d => height - d)
+                .attr("width", x.bandwidth())
+                .attr("height", d => d);
+
+            bars.exit().remove();
+        }
+
+        // Event listener for mouse clicks on the HTML page
+        document.body.addEventListener("click", function(event) {
+            // Calculate bar height based on mouse y position
+            const yPos = event.clientY - svg.node().getBoundingClientRect().top;
+            if (yPos < 0 || yPos > height) return; // Ignore clicks outside SVG
+            data.push(height - yPos);
+            updateVisualization();
+        });
+
+ // Bubble sort with step-through visualization
+ let i = 0, j = 0;
+        let sorting = false;
+        async function bubbleSortStep() {
+            if (!sorting) {
+                sorting = true;
+                document.getElementById("step").disabled = false;
+            }
+
+            if (i < data.length) {
+                if (j < data.length - i - 1) {
+                    svg.selectAll(".bar").data(data)
+                        .classed("swap", false)
+                        .classed("swap", (d, k) => k === j || k === j + 1);
+
+                    if (data[j] > data[j + 1]) {
+                        let temp = data[j];
+                        data[j] = data[j + 1];
+                        data[j + 1] = temp;
+
+                        svg.selectAll(".bar").data(data)
+                            .transition()
+                            .duration(100)
+                            .attr("x", (d, k) => x(k))
+                            .attr("y", d => height - d)
+                            .attr("height", d => d);
+                    }
+
+                    j++;
+                } else {
+                    j = 0;
+                    i++;
+                }
+            } else {
+                sorting = false;
+                document.getElementById("step").disabled = true;
+                i = 0;
+                j = 0;
+            }
+
+            // Delay removal of swap class to ensure visibility
+            setTimeout(() => {
+                svg.selectAll(".bar").data(data)
+                    .classed("swap", false);
+            }, 1000);
+        }
+
+
+        // Attach event listeners to the buttons
+        document.getElementById("sort").addEventListener("click", () => {
+            if (!sorting) {
+                bubbleSortStep();
+            }
+        });
+
+        document.getElementById("step").addEventListener("click", bubbleSortStep);
+    </script>
+</body>
+</html>
