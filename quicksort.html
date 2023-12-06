@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+        .bar:hover { fill: orange; }
+        .active { fill: red; }
+    </style>
+</head>
+<body>
+    <svg width="800" height="500"></svg>
+    <button id="sort">Sort</button>
+    <button id="step">Step</button>
+    <button id="reset">Reset</button>
+    <script>
+        let data = [];
+        let generator = null; // Generator for controlling the sorting steps
+        let swapIndex1 = null; // Track indices of bars being swapped
+        let swapIndex2 = null;
+        const width = 800, height = 500, barWidth = 20;
+        const svg = d3.select("svg");
+
+        svg.on("click", function() {
+            const y = d3.mouse(this)[1];
+            addBar(height - y);
+        });
+
+        function addBar(height) {
+            data.push(height);
+            drawBars();
+        }
+
+        function drawBars() {
+            var bars = svg.selectAll(".bar")
+                          .data(data, (d) => d);
+
+            bars.enter()
+                .append("rect")
+                .attr("class", "bar")
+                .merge(bars)
+                .attr("x", (d, i) => i * barWidth)
+                .attr("y", d => 500 - d)
+                .attr("width", barWidth - 1)
+                .attr("height", d => d)
+                .attr("fill", function(d, i) {
+                    if (i === swapIndex1 || i === swapIndex2) {
+                        return 'red'; // Color for swapped bars
+                    }
+                    return 'steelblue'; // Default color
+                });
+
+            bars.exit().remove();
+
+            // Reset swap indices
+            swapIndex1 = null;
+            swapIndex2 = null;
+        }
+
+        function swap(array, i, j) {
+            [array[i], array[j]] = [array[j], array[i]];
+            swapIndex1 = i;
+            swapIndex2 = j;
+        }
+
+        function* quicksortGenerator(array, left = 0, right = array.length - 1) {
+            if (left < right) {
+                var pivot = left + Math.floor((right - left) / 2);
+                pivot = yield* partitionGenerator(array, left, right, pivot);
+                yield* quicksortGenerator(array, left, pivot - 1);
+                yield* quicksortGenerator(array, pivot + 1, right);
+            }
+        }
+
+        function* partitionGenerator(array, left, right, pivotIndex) {
+            let pivotValue = array[pivotIndex];
+            swap(array, pivotIndex, right); // Move pivot to the end
+            let storeIndex = left;
+            for (let i = left; i < right; i++) {
+                if (array[i] < pivotValue) {
+                    swap(array, i, storeIndex);
+                    storeIndex++;
+                    yield;
+                    drawBars();
+                }
+            }
+            swap(array, storeIndex, right); // Move pivot to its final place
+            yield;
+            drawBars();
+            return storeIndex;
+        }
+
+        d3.select("#sort").on("click", function() {
+            generator = quicksortGenerator(data); // Initialize the generator
+            stepThroughSort(); // Start the sorting
+        });
+
+        d3.select("#step").on("click", function() {
+            stepThroughSort(); // Perform the next step in the sorting
+        });
+
+        d3.select("#reset").on("click", function() {
+            data = [];
+            svg.selectAll(".bar").remove();
+            generator = null; // Reset the generator
+        });
+
+        function stepThroughSort() {
+            if (generator) {
+                const next = generator.next(); // Perform the next step
+                if (next.done) {
+                    generator = null; // Sorting is complete
+                }
+                drawBars();
+            }
+        }
+    </script>
+</body>
+</html>
