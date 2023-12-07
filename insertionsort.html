@@ -1,0 +1,109 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    
+<style>
+    .bar:hover { fill: rgb(17, 255, 0); }
+    .active { fill: rgb(144, 0, 255); }
+    button {
+        background-color: #4CAF50; /* Green */
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Adding shadow */
+    }
+</style>
+
+</head>
+<body>
+    <svg width="800" height="500"></svg>
+    <button id="sort">Sort</button>
+    <button id="step">Step</button>
+    
+<script>
+    let data = [];
+    let i = 1; // Index for insertion sort
+    let j = 0; // Secondary index for insertion sort
+    let currentlySorting = false; // Flag to check if a sorting step is in progress
+    const width = 800, height = 500, barWidth = 20;
+    const svg = d3.select("svg").attr("width", width).attr("height", height);
+
+    svg.on("click", function() {
+        const y = d3.mouse(this)[1];
+        addBar(height - y);
+    });
+
+    function addBar(height) {
+        data.push(height);
+        drawBars();
+    }
+
+    function drawBars() {
+        svg.selectAll('rect').remove();
+
+        svg.selectAll('rect')
+           .data(data)
+           .enter()
+           .append('rect')
+           .attr('width', barWidth - 1)
+           .attr('height', function(d) { return d; })
+           .attr('x', function(d, i) { return i * barWidth; })
+           .attr('y', function(d) { return height - d; })
+           .attr('class', 'bar')
+           .attr('fill', function(d, idx) {
+               return (currentlySorting && idx === j + 1) ? 'red' : 'steelblue'; // Highlight the currently sorting bar
+           });
+    }
+
+    function insertionSortStep() {
+        if (i < data.length) {
+            let key = data[i];
+            j = i - 1;
+            currentlySorting = true;
+
+            while (j >= 0 && data[j] > key) {
+                data[j + 1] = data[j];
+                j = j - 1;
+            }
+            data[j + 1] = key;
+
+            i++;
+        } else {
+            i = 1;
+            j = 0;
+            currentlySorting = false;
+        }
+    }
+
+    document.getElementById('sort').addEventListener('click', () => {
+        while (i < data.length) {
+            insertionSortStep();
+        }
+        currentlySorting = false;
+        drawBars();
+    });
+
+    document.getElementById('step').addEventListener('click', () => {
+        insertionSortStep();
+        drawBars();
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+        data = [];
+        drawBars();
+        i = 1;
+        j = 0;
+        currentlySorting = false;
+    });
+</script>
+
+</body>
+</html>
