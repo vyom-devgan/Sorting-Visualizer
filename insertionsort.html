@@ -5,7 +5,7 @@
     <script src="https://d3js.org/d3.v5.min.js"></script>
     
 <style>
-    .bar:hover { fill: rgb(17, 255, 0); }
+    .bar:hover { fill: rgb(255, 0, 234); }
     .active { fill: rgb(144, 0, 255); }
     button {
         background-color: #4CAF50; /* Green */
@@ -59,7 +59,7 @@
            .attr('y', function(d) { return height - d; })
            .attr('class', 'bar')
            .attr('fill', function(d, idx) {
-               return (currentlySorting && idx === j + 1) ? 'red' : 'steelblue'; // Highlight the currently sorting bar
+               return (currentlySorting && idx === j + 1) ? 'red' : 'black'; // Highlight the currently sorting bar
            });
     }
 
